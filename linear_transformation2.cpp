@@ -148,7 +148,8 @@ vector<T> get_diagonal(int position, vector<vector<T>> U)
 
 Ciphertext Linear_Transform_Plain(Ciphertext ct, vector<Plaintext> U_diagonals, GaloisKeys gal_keys, EncryptionParameters params)
 {
-    auto context = SEALContext::Create(params);
+    // auto context = SEALContext::Create(params);
+    SEALContext context(params);
     Evaluator evaluator(context);
 
     // Fill ct with duplicate
@@ -175,7 +176,8 @@ Ciphertext Linear_Transform_Plain(Ciphertext ct, vector<Plaintext> U_diagonals, 
 
 Ciphertext Linear_Transform_Cipher(Ciphertext ct, vector<Ciphertext> U_diagonals, GaloisKeys gal_keys, EncryptionParameters params)
 {
-    auto context = SEALContext::Create(params);
+    // auto context = SEALContext::Create(params);
+    SEALContext context(params);
     Evaluator evaluator(context);
 
     // Fill ct with duplicate
@@ -226,17 +228,20 @@ void PMatrix_CVector_Multiplication(size_t poly_modulus_degree, int dimension)
         exit(1);
     }
 
-    EncryptionParameters params(scheme_type::CKKS);
+    EncryptionParameters params(scheme_type::ckks);
     params.set_poly_modulus_degree(poly_modulus_degree);
     cout << "MAX BIT COUNT: " << CoeffModulus::MaxBitCount(poly_modulus_degree) << endl;
     params.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, {60, 40, 40, 60}));
-    auto context = SEALContext::Create(params);
+    SEALContext context(params);
 
     // Generate keys, encryptor, decryptor and evaluator
     KeyGenerator keygen(context);
-    PublicKey pk = keygen.public_key();
+    PublicKey pk;// = keygen.public_key();
+    keygen.create_public_key(pk);
     SecretKey sk = keygen.secret_key();
-    GaloisKeys gal_keys = keygen.galois_keys();
+    GaloisKeys gal_keys;// = keygen.galois_keys();
+    keygen.create_galois_keys(gal_keys);
+
 
     Encryptor encryptor(context, pk);
     Evaluator evaluator(context);

@@ -30,11 +30,11 @@ vector<T> rotate_vec(vector<T> input_vec, int num_rotations)
     return rotated_res;
 }
 
-void print_Ciphertext_Info(string ctx_name, Ciphertext ctx, shared_ptr<SEALContext> context)
+void print_Ciphertext_Info(string ctx_name, Ciphertext ctx, const SEALContext& context)
 {
     cout << "/" << endl;
     cout << "| " << ctx_name << " Info:" << endl;
-    cout << "|\tLevel:\t" << context->get_context_data(ctx.parms_id())->chain_index() << endl;
+    cout << "|\tLevel:\t" << context.get_context_data(ctx.parms_id())->chain_index() << endl;
     cout << "|\tScale:\t" << log2(ctx.scale()) << endl;
     ios old_fmt(nullptr);
     old_fmt.copyfmt(cout);
@@ -56,7 +56,8 @@ Ciphertext Tree_cipher(Ciphertext ctx, int degree, double scale, vector<double> 
 {
     cout << "->" << __func__ << endl;
 
-    auto context = SEALContext::Create(params);
+    // auto context = SEALContext::Create(params);
+    SEALContext context(params);
 
     // Print Ciphertext Information
     print_Ciphertext_Info("CTX", ctx, context);
@@ -137,7 +138,8 @@ Ciphertext Tree_cipher(Ciphertext ctx, int degree, double scale, vector<double> 
 
 Ciphertext Horner_cipher(Ciphertext ctx, int degree, vector<double> coeffs, CKKSEncoder &ckks_encoder, double scale, Evaluator &evaluator, Encryptor &encryptor, RelinKeys relin_keys, EncryptionParameters params)
 {
-    auto context = SEALContext::Create(params);
+    // auto context = SEALContext::Create(params);
+    SEALContext context(params);
 
     cout << "->" << __func__ << endl;
     cout << "->" << __LINE__ << endl;
@@ -169,8 +171,8 @@ Ciphertext Horner_cipher(Ciphertext ctx, int degree, vector<double> coeffs, CKKS
 
     for (int i = degree - 1; i >= 0; i--)
     {
-        int ctx_level = context->get_context_data(ctx.parms_id())->chain_index();
-        int temp_level = context->get_context_data(temp.parms_id())->chain_index();
+        int ctx_level = context.get_context_data(ctx.parms_id())->chain_index();
+        int temp_level = context.get_context_data(temp.parms_id())->chain_index();
         if (ctx_level > temp_level)
         {
             evaluator.mod_switch_to_inplace(ctx, temp.parms_id());
@@ -412,21 +414,25 @@ int main()
 {
 
     // Test evaluate sigmoid approx
-    EncryptionParameters params(scheme_type::CKKS);
+    EncryptionParameters params(scheme_type::ckks);
 
     params.set_poly_modulus_degree(POLY_MOD_DEGREE);
     params.set_coeff_modulus(CoeffModulus::Create(POLY_MOD_DEGREE, {60, 40, 40, 40, 40, 40, 40, 40, 60}));
 
     double scale = pow(2.0, 40);
 
-    auto context = SEALContext::Create(params);
+    // auto context = SEALContext::Create(params);
+    SEALContext context(params);
 
     // Generate keys, encryptor, decryptor and evaluator
     KeyGenerator keygen(context);
-    PublicKey pk = keygen.public_key();
+    PublicKey pk;// = keygen.public_key();
+    keygen.create_public_key(pk);
     SecretKey sk = keygen.secret_key();
-    GaloisKeys gal_keys = keygen.galois_keys();
-    RelinKeys relin_keys = keygen.relin_keys();
+    GaloisKeys gal_keys;// = keygen.galois_keys();
+    keygen.create_galois_keys(gal_keys);
+    RelinKeys relin_keys;// = keygen.relin_keys();
+    keygen.create_relin_keys(relin_keys);
 
     Encryptor encryptor(context, pk);
     Evaluator evaluator(context);

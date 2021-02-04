@@ -89,18 +89,21 @@ void bfvRotation()
 {
     cout << "---------- Rotations in BFV -----------\n"
          << endl;
-    EncryptionParameters params(scheme_type::BFV);
+    EncryptionParameters params(scheme_type::bfv);
     size_t poly_modulus_degree = 8192;
     params.set_poly_modulus_degree(poly_modulus_degree);
     params.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree));
     params.set_plain_modulus(PlainModulus::Batching(poly_modulus_degree, 20));
 
-    auto context = SEALContext::Create(params);
+    // auto context = SEALContext::Create(params);
+    SEALContext context(params);
 
     KeyGenerator keygen(context);
-    PublicKey pk = keygen.public_key();
+    PublicKey pk;// = keygen.public_key();
+    keygen.create_public_key(pk);
     SecretKey sk = keygen.secret_key();
-    RelinKeys relin_keys = keygen.relin_keys();
+    RelinKeys relin_keys;// = keygen.relin_keys();
+    keygen.create_relin_keys(relin_keys);
 
     Encryptor encryptor(context, pk);
     Decryptor decryptor(context, sk);
@@ -132,7 +135,8 @@ void bfvRotation()
     encryptor.encrypt(plain_matrix, cipher_matrix);
     cout << "\t+ NOISE budget in cipher_matrix: " << decryptor.invariant_noise_budget(cipher_matrix) << " bits" << endl;
 
-    GaloisKeys gal_keys = keygen.galois_keys();
+    GaloisKeys gal_keys;// = keygen.galois_keys();
+    keygen.create_galois_keys(gal_keys);
 
     // Rotate matrix rows 3 steps to the left
     cout << "\nRotate rows 3 steps left:" << endl;
@@ -168,21 +172,26 @@ void ckksRotation()
 {
     cout << "---------- Rotations in CKKS -----------\n"
          << endl;
-    EncryptionParameters parms(scheme_type::CKKS);
+    EncryptionParameters parms(scheme_type::ckks);
 
     size_t poly_modulus_degree = 8192;
     parms.set_poly_modulus_degree(poly_modulus_degree);
     parms.set_coeff_modulus(CoeffModulus::Create(
         poly_modulus_degree, {40, 40, 40, 40, 40}));
 
-    auto context = SEALContext::Create(parms);
+    // auto context = SEALContext::Create(parms);
+    SEALContext context(parms);
     cout << endl;
 
     KeyGenerator keygen(context);
-    PublicKey public_key = keygen.public_key();
+    PublicKey public_key;// = keygen.public_key();
+    keygen.create_public_key(public_key);
     SecretKey secret_key = keygen.secret_key();
-    RelinKeys relin_keys = keygen.relin_keys();
-    GaloisKeys gal_keys = keygen.galois_keys();
+    RelinKeys relin_keys;// = keygen.relin_keys();
+    keygen.create_relin_keys(relin_keys);
+    GaloisKeys gal_keys;// = keygen.galois_keys();
+    keygen.create_galois_keys(gal_keys);
+
     Encryptor encryptor(context, public_key);
     Evaluator evaluator(context);
     Decryptor decryptor(context, secret_key);

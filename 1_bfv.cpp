@@ -7,21 +7,23 @@ using namespace seal;
 int main()
 {
 	cout << "\n--------- Microsoft SEAL DEMO using the BFV scheme ---------\n" << endl ;
-	EncryptionParameters parms(scheme_type::BFV);
-
+	EncryptionParameters parms(scheme_type::bfv);
+	
 	size_t poly_modulus_degree = 4096;
 	parms.set_poly_modulus_degree(poly_modulus_degree);
 	parms.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree));
 
 	parms.set_plain_modulus(1024);
 
-	auto context = SEALContext::Create(parms);
+	//auto context = SEALContext::Create(parms);
+	SEALContext context(parms);
 
 	cout << endl;
 	cout << "~~~~~~ A naive way to calculate 4(x^2+1)(x+1)^2. ~~~~~~" << endl;
 
 	KeyGenerator keygen(context);
-	PublicKey public_key = keygen.public_key();
+	PublicKey public_key;
+	keygen.create_public_key(public_key);
 	SecretKey secret_key = keygen.secret_key();
 
 	Encryptor encryptor(context, public_key);
@@ -140,7 +142,9 @@ int main()
 
 	/* Applying the same example but with relinearization */
 	cout << "Generate relinearization keys." << endl;
-	auto relin_keys = keygen.relin_keys();
+	RelinKeys relin_keys;
+	keygen.create_relin_keys(relin_keys);
+	// auto relin_keys = keygen.relin_keys();
 
 	/* We now repeat the computation relinearizing after each multiplication. */
 	cout << "Compute and relinearize x_squared (x^2), then compute x_sq_plus_one (x^2+1)" << endl;

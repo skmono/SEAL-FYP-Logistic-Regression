@@ -132,14 +132,16 @@ void ckksBenchmark(size_t poly_modulus_degree)
          << endl;
 
     // Set params
-    EncryptionParameters params(scheme_type::CKKS);
+    EncryptionParameters params(scheme_type::ckks);
     params.set_poly_modulus_degree(poly_modulus_degree);
     params.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree));
-    auto context = SEALContext::Create(params);
+    // auto context = SEALContext::Create(params);
+    SEALContext context(params);
 
     // Generate keys, encryptor, decryptor and evaluator
     KeyGenerator keygen(context);
-    PublicKey pk = keygen.public_key();
+    PublicKey pk;// = keygen.public_key();
+    keygen.create_public_key(pk);
     SecretKey sk = keygen.secret_key();
 
     Encryptor encryptor(context, pk);
@@ -619,14 +621,16 @@ void ckksBenchmarkMatrix(size_t poly_modulus_degree)
          << endl;
 
     // Set params
-    EncryptionParameters params(scheme_type::CKKS);
+    EncryptionParameters params(scheme_type::ckks);
     params.set_poly_modulus_degree(poly_modulus_degree);
     params.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree));
-    auto context = SEALContext::Create(params);
+    // auto context = SEALContext::Create(params);
+    SEALContext context(params);
 
     // Generate keys, encryptor, decryptor and evaluator
     KeyGenerator keygen(context);
-    PublicKey pk = keygen.public_key();
+    PublicKey pk;// = keygen.public_key();
+    keygen.create_public_key(pk);
     SecretKey sk = keygen.secret_key();
 
     Encryptor encryptor(context, pk);
@@ -1110,7 +1114,7 @@ int main()
 
     // Need to plot graph with x-axis as the size and y-axis as the duration
     // Plot 3 different graphs (with 3 different ploy_modulus_degree)
-    EncryptionParameters params(scheme_type::CKKS);
+    EncryptionParameters params(scheme_type::ckks);
 
     // Case 1 : poly_modulus_degree = 4096
     size_t poly_modulus_degree = 4096;

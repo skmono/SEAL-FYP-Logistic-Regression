@@ -9,7 +9,7 @@ int main()
     cout << "\n--------- Levels Demo ---------\n"
          << endl;
 
-    EncryptionParameters params(scheme_type::BFV);
+    EncryptionParameters params(scheme_type::bfv);
     size_t poly_modulus_degree = 8192;
     params.set_poly_modulus_degree(poly_modulus_degree);
 
@@ -19,12 +19,13 @@ int main()
     // 20 bit poly mod degree
     params.set_plain_modulus(PlainModulus::Batching(poly_modulus_degree, 20));
 
-    auto context = SEALContext::Create(params);
+//     auto context = SEALContext::Create(params);
+    SEALContext context(params);
 
     cout << "Print the modulus switching chain" << endl;
 
     // Print the key level parameter info
-    auto context_data = context->key_context_data();
+    auto context_data = context.key_context_data();
     cout << "\tLevel (chain index): " << context_data->chain_index() << endl;
     // cout << "\tparms_id: " << context_data->parms_id() << endl;
     cout << "\tcoeff_modulus primes: ";
@@ -38,15 +39,15 @@ int main()
     cout << " \\-->";
 
     // Iterate over the remaining levels
-    context_data = context->first_context_data();
+    context_data = context.first_context_data();
     while (context_data)
     {
         cout << " Level (chain index): " << context_data->chain_index();
-        if (context_data->parms_id() == context->first_parms_id())
+        if (context_data->parms_id() == context.first_parms_id())
         {
             cout << " ...... first_context_data()" << endl;
         }
-        else if (context_data->parms_id() == context->last_parms_id())
+        else if (context_data->parms_id() == context.last_parms_id())
         {
             cout << " ...... last_context_data()" << endl;
         }
@@ -76,10 +77,11 @@ int main()
 
     // Generate keys
     KeyGenerator keygen(context);
-    PublicKey pk = keygen.public_key();
+    PublicKey pk;// = keygen.public_key();
+    keygen.create_public_key(pk);
     SecretKey sk = keygen.secret_key();
-    RelinKeys relin_keys = keygen.relin_keys();
-    GaloisKeys gal_keys = keygen.galois_keys();
+    RelinKeys relin_keys;// = keygen.relin_keys();
+    keygen.create_relin_keys(relin_keys);
 
     Encryptor encryptor(context, pk);
     Decryptor decryptor(context, sk);
@@ -89,7 +91,7 @@ int main()
     Ciphertext cipher;
     encryptor.encrypt(plain, cipher);
     cout << "Perform modulus switching on cipher" << endl;
-    context_data = context->first_context_data();
+    context_data = context.first_context_data();
     cout << "---->";
 
     while (context_data->next_context_data())

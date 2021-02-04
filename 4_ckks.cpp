@@ -58,19 +58,22 @@ int main()
          << endl;
 
     // Set up the parameters
-    EncryptionParameters params(scheme_type::CKKS);
+    EncryptionParameters params(scheme_type::ckks);
     size_t poly_modulus_degree = 8192;
     params.set_poly_modulus_degree(poly_modulus_degree);
     params.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, {60, 40, 40, 60}));
 
     double scale = pow(2.0, 40);
-    auto context = SEALContext::Create(params);
+    SEALContext context(params);
+    // auto context = SEALContext::Create(params);
 
     // Generate keys, encryptor, decryptor and evaluator
     KeyGenerator keygen(context);
-    PublicKey pk = keygen.public_key();
+    PublicKey pk;// = keygen.public_key();
+    keygen.create_public_key(pk);
     SecretKey sk = keygen.secret_key();
-    RelinKeys relin_keys = keygen.relin_keys();
+    RelinKeys relin_keys;// = keygen.relin_keys();
+    keygen.create_relin_keys(relin_keys);
 
     Encryptor encryptor(context, pk);
     Decryptor decryptor(context, sk);
@@ -145,11 +148,11 @@ int main()
 
     cout << "\nParameters use by all three terms are different:" << endl;
     cout << "\t+ Modulus chain index for x3_encrypted: "
-         << context->get_context_data(x3_encrypted.parms_id())->chain_index() << endl;
+         << context.get_context_data(x3_encrypted.parms_id())->chain_index() << endl;
     cout << "\t+ Modulus chain index for x1_encrypted: "
-         << context->get_context_data(x1_encrypted.parms_id())->chain_index() << endl;
+         << context.get_context_data(x1_encrypted.parms_id())->chain_index() << endl;
     cout << "\t+ Modulus chain index for plain_coeff0: "
-         << context->get_context_data(plain_coeff0.parms_id())->chain_index() << endl;
+         << context.get_context_data(plain_coeff0.parms_id())->chain_index() << endl;
     cout << endl;
 
     /*

@@ -8,22 +8,18 @@ using namespace std;
 using namespace seal;
 
 // Helper function that prints parameters
-void print_parameters(shared_ptr<SEALContext> context)
+void print_parameters(const SEALContext &context)
 {
     // Verify parameters
-    if (!context)
-    {
-        throw invalid_argument("context is not set");
-    }
-    auto &context_data = *context->key_context_data();
+    auto &context_data = *context.key_context_data();
 
     string scheme_name;
     switch (context_data.parms().scheme())
     {
-    case scheme_type::BFV:
+    case scheme_type::bfv:
         scheme_name = "BFV";
         break;
-    case scheme_type::CKKS:
+    case scheme_type::ckks:
         scheme_name = "CKKS";
         break;
     default:
@@ -45,7 +41,7 @@ void print_parameters(shared_ptr<SEALContext> context)
     cout << coeff_modulus.back().bit_count();
     cout << ") bits" << endl;
 
-    if (context_data.parms().scheme() == scheme_type::BFV)
+    if (context_data.parms().scheme() == scheme_type::bfv)
     {
         cout << "|   plain_modulus: " << context_data.parms().plain_modulus().value() << endl;
     }
@@ -102,7 +98,7 @@ void horner(int degree, double x)
     chrono::high_resolution_clock::time_point time_start, time_end;
     chrono::microseconds time_diff;
 
-    EncryptionParameters parms(scheme_type::CKKS);
+    EncryptionParameters parms(scheme_type::ckks);
 
     size_t poly_modulus_degree = 32768;
     parms.set_poly_modulus_degree(poly_modulus_degree);
@@ -116,12 +112,14 @@ void horner(int degree, double x)
 
     double scale = pow(2.0, 40);
 
-    auto context = SEALContext::Create(parms);
+    SEALContext context(parms);
 
     KeyGenerator keygen(context);
-    auto pk = keygen.public_key();
+    PublicKey pk;// = keygen.public_key();
+    keygen.create_public_key(pk);
     auto sk = keygen.secret_key();
-    auto relin_keys = keygen.relin_keys();
+    RelinKeys relin_keys;// = keygen.relin_keys();
+    keygen.create_relin_keys(relin_keys);
     Encryptor encryptor(context, pk);
     Decryptor decryptor(context, sk);
 
@@ -235,7 +233,7 @@ void tree(int degree, double x)
     chrono::high_resolution_clock::time_point time_start, time_end;
     chrono::microseconds time_diff;
 
-    EncryptionParameters parms(scheme_type::CKKS);
+    EncryptionParameters parms(scheme_type::ckks);
 
     int depth = ceil(log2(degree));
 
@@ -250,12 +248,16 @@ void tree(int degree, double x)
 
     double scale = pow(2.0, 40);
 
-    auto context = SEALContext::Create(parms);
+    // auto context = SEALContext::Create(parms);
+    SEALContext context(parms);
 
     KeyGenerator keygen(context);
-    auto pk = keygen.public_key();
+    PublicKey pk;// = keygen.public_key();
+    keygen.create_public_key(pk);
     auto sk = keygen.secret_key();
-    auto relin_keys = keygen.relin_keys();
+    RelinKeys relin_keys;// = keygen.relin_keys();
+    keygen.create_relin_keys(relin_keys);
+
     Encryptor encryptor(context, pk);
     Decryptor decryptor(context, sk);
 

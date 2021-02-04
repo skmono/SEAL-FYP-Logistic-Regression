@@ -104,18 +104,22 @@ void bfvOps()
          << endl;
 
     // Set the parameters
-    EncryptionParameters params(scheme_type::BFV);
+    EncryptionParameters params(scheme_type::bfv);
     size_t poly_modulus_degree = 8192;
     params.set_poly_modulus_degree(poly_modulus_degree);
     params.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree));
     params.set_plain_modulus(786433);
-    auto context = SEALContext::Create(params);
+    // auto context = SEALContext::Create(params);
+    SEALContext context(params);
 
     // Generate keys, encryptor, decryptor and evaluator
     KeyGenerator keygen(context);
-    PublicKey pk = keygen.public_key();
+    PublicKey pk;// = keygen.public_key();
+    keygen.create_public_key(pk);
     SecretKey sk = keygen.secret_key();
-    RelinKeys relin_keys = keygen.relin_keys();
+    RelinKeys relin_keys;// = keygen.relin_keys();
+    keygen.create_relin_keys(relin_keys);
+
 
     Encryptor encryptor(context, pk);
     Evaluator evaluator(context);
@@ -202,17 +206,20 @@ void ckksOps()
          << endl;
 
     // Set params
-    EncryptionParameters params(scheme_type::CKKS);
+    EncryptionParameters params(scheme_type::ckks);
     size_t poly_modulus_degree = 8192;
     params.set_poly_modulus_degree(poly_modulus_degree);
     params.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree));
-    auto context = SEALContext::Create(params);
+    // auto context = SEALContext::Create(params);
+    SEALContext context(params);
 
     // Generate keys, encryptor, decryptor and evaluator
     KeyGenerator keygen(context);
-    PublicKey pk = keygen.public_key();
+    PublicKey pk;// = keygen.public_key();
+    keygen.create_public_key(pk);
     SecretKey sk = keygen.secret_key();
-    RelinKeys relin_keys = keygen.relin_keys();
+    RelinKeys relin_keys;// = keygen.relin_keys();
+    keygen.create_relin_keys(relin_keys);
 
     Encryptor encryptor(context, pk);
     Evaluator evaluator(context);

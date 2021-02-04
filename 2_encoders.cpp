@@ -3,9 +3,6 @@
 #include <iomanip>
 #include <vector>
 
-#include "seal/seal.h"
-
-
 using namespace std;
 using namespace seal;
 
@@ -89,71 +86,13 @@ inline void print_vector(std::vector<T> vec, std::size_t print_size = 4, int pre
     std::cout.copyfmt(old_fmt);
 }
 
-void integerEncoding()
-{
-    cout << "\n--------- Integer Encoding ---------\n"
-         << endl;
-
-    // Set the parameters
-    EncryptionParameters params(scheme_type::BFV);
-    size_t poly_modulus_degree = 4096;
-    params.set_poly_modulus_degree(poly_modulus_degree);
-    params.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree));
-    params.set_plain_modulus(512);
-    auto context = SEALContext::Create(params);
-
-    // Generate keys, encryptor, decryptor and evaluator
-    KeyGenerator keygen(context);
-    PublicKey pk = keygen.public_key();
-    SecretKey sk = keygen.secret_key();
-    Encryptor encryptor(context, pk);
-    Decryptor decryptor(context, sk);
-    Evaluator evaluator(context);
-
-    // Create IntegerEncoder
-    IntegerEncoder encoder(context);
-
-    // Encode two values
-    int val1 = 10;
-    Plaintext plain1 = encoder.encode(val1);
-    cout << "Encode " << val1 << " as polynomial " << plain1.to_string() << endl;
-
-    int val2 = 12;
-    Plaintext plain2 = encoder.encode(val2);
-    cout << "Encode " << val2 << " as polynomial " << plain2.to_string() << endl;
-
-    // Encrypt the encoded values
-    Ciphertext cipher1, cipher2;
-    cout << "\nEncrypt plain1 to cipher1 and plain2 to cipher2" << endl;
-    encryptor.encrypt(plain1, cipher1);
-    encryptor.encrypt(plain2, cipher2);
-    cout << "\t+ NOISE budget in cipher1: " << decryptor.invariant_noise_budget(cipher1) << " bits" << endl;
-    cout << "\t+ NOISE budget in cipher2: " << decryptor.invariant_noise_budget(cipher2) << " bits" << endl;
-
-    // Example: Compute (cipher1*cipher2) - cipher1
-    Ciphertext cipherResult;
-    cout << "\nComputing (cipher1*cipher2) - cipher1:" << endl;
-    Ciphertext cipher1_mul_cipher2;
-    evaluator.multiply(cipher1, cipher2, cipher1_mul_cipher2);
-    evaluator.sub(cipher1_mul_cipher2, cipher1, cipherResult);
-    cout << "\t+ NOISE budget in cipherResult: " << decryptor.invariant_noise_budget(cipherResult) << " bits" << endl;
-
-    // Decrypt
-    Plaintext plain_result;
-    decryptor.decrypt(cipherResult, plain_result);
-    cout << "Decrypted plaintext result:\n\t" << plain_result.to_string() << endl;
-
-    // Decode
-    cout << "Decoded Result:\n\t" << encoder.decode_int32(plain_result) << endl;
-}
-
 void batchEncoding()
 {
     cout << "\n--------- Batch Encoding ---------\n"
          << endl;
 
     // Set the parameters
-    EncryptionParameters params(scheme_type::BFV);
+    EncryptionParameters params(scheme_type::bfv);
     size_t poly_modulus_degree = 8192;
     params.set_poly_modulus_degree(poly_modulus_degree);
     params.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree));
@@ -162,16 +101,19 @@ void batchEncoding()
     // SEAL provides a helper function for it
     // Creating a 20 bit prime
     params.set_plain_modulus(PlainModulus::Batching(poly_modulus_degree, 20));
-    auto context = SEALContext::Create(params);
+    // auto context = SEALContext::Create(params);
+    SEALContext context(params);
 
-    auto qualifiers = context->first_context_data()->qualifiers();
+    auto qualifiers = context.first_context_data()->qualifiers();
     cout << "Batching enabled: " << boolalpha << qualifiers.using_batching << endl;
 
     // Generate keys, encryptor, decryptor and evaluator
     KeyGenerator keygen(context);
-    PublicKey pk = keygen.public_key();
+    PublicKey pk;// = keygen.public_key();
+    keygen.create_public_key(pk);
     SecretKey sk = keygen.secret_key();
-    RelinKeys relin_keys = keygen.relin_keys();
+    RelinKeys relin_keys;// = keygen.relin_keys();
+    keygen.create_relin_keys(relin_keys);
 
     Encryptor encryptor(context, pk);
     Evaluator evaluator(context);
@@ -250,20 +192,25 @@ void ckksEncoding()
          << endl;
 
     // Set the parameters
-    EncryptionParameters params(scheme_type::CKKS);
+    EncryptionParameters params(scheme_type::ckks);
     size_t poly_modulus_degree = 8192;
     params.set_poly_modulus_degree(poly_modulus_degree);
     // CKKS doesn't require a plain_modulus
     // Generating 5 40bit prime numbers for CoeffModulus
     params.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, {40, 40, 40, 40, 40}));
 
-    auto context = SEALContext::Create(params);
+    // auto context = SEALContext::Create(params);
+    SEALContext context(params);
 
     // Generate keys, encryptor, decryptor and evaluator
     KeyGenerator keygen(context);
-    PublicKey pk = keygen.public_key();
+    // PublicKey pk = keygen.public_key();
+    PublicKey pk;
+    keygen.create_public_key(pk);
     SecretKey sk = keygen.secret_key();
-    RelinKeys relin_keys = keygen.relin_keys();
+    // RelinKeys relin_keys = keygen.relin_keys();
+    RelinKeys relin_keys;
+    keygen.create_relin_keys(relin_keys);
     Encryptor encryptor(context, pk);
     Decryptor decryptor(context, sk);
     Evaluator evaluator(context);
@@ -308,7 +255,6 @@ void ckksEncoding()
 int main()
 {
 
-    integerEncoding();
     batchEncoding();
     ckksEncoding();
     return 0;
